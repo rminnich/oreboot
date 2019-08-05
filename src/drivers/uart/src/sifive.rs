@@ -95,8 +95,11 @@ impl SiFive {
 
 impl Driver for SiFive {
     fn init(&mut self) {
-        self.IE.set(0xaa55aa55u32);
-        loop{};
+        let mut i: u32 = 0;
+        loop {
+            i = i + 1;
+        self.IE.set(i as u32);
+        }
 //        self.BR.write(LC::DivisorLatchAccessBit::BaudRate);
         // Until we know the clock rate the divisor values are kind of
         // impossible to know. Throw in a phony value.
