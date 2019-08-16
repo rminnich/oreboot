@@ -4,6 +4,7 @@ use core::ops;
 use register::mmio::{ReadOnly, ReadWrite};
 use register::{register_bitfields, Field};
 use crate::reg;
+use crate::ux00;
 
 #[allow(non_snake_case)]
 #[repr(C)]
@@ -216,31 +217,33 @@ register_bitfields! {
 // int_mask
 // 0
 // MASK interrupt due to cause INT_STATUS [31:0]
-// 	ux00ddr_writeregmap(FU540_DDRCTRL, ddr_ctl_settings, ddr_phy_settings);
-// 	ux00ddr_disableaxireadinterleave(FU540_DDRCTRL);
-
-// 	ux00ddr_disableoptimalrmodw(FU540_DDRCTRL);
-
-// 	ux00ddr_enablewriteleveling(FU540_DDRCTRL);
-// 	ux00ddr_enablereadleveling(FU540_DDRCTRL);
-// 	ux00ddr_enablereadlevelinggate(FU540_DDRCTRL);
-// 	if (ux00ddr_getdramclass(FU540_DDRCTRL) == DRAM_CLASS_DDR4)
-// 		ux00ddr_enablevreftraining(FU540_DDRCTRL);
-
-// 	//mask off interrupts for leveling completion
-// 	ux00ddr_mask_leveling_completed_interrupt(FU540_DDRCTRL);
-
-// 	ux00ddr_mask_mc_init_complete_interrupt(FU540_DDRCTRL);
-// 	ux00ddr_mask_outofrange_interrupts(FU540_DDRCTRL);
-// 	ux00ddr_setuprangeprotection(FU540_DDRCTRL, DDR_SIZE);
-// 	ux00ddr_mask_port_command_error_interrupt(FU540_DDRCTRL);
-
-// 	const uint64_t ddr_size = DDR_SIZE;
-// 	const uint64_t ddr_end = FU540_DRAM + ddr_size;
-// 	ux00ddr_start(FU540_DDRCTRL, FU540_DDRBUSBLOCKER, ddr_end);
-
-// 	ux00ddr_phy_fixup(FU540_DDRCTRL);
-// }
+fn sdram_init() {
+    ux00::ux00ddr_writeregmap();
+    ux00::ux00ddr_disableaxireadinterleave();
+    
+    ux00::ux00ddr_disableoptimalrmodw();
+    
+    ux00::ux00ddr_enablewriteleveling();
+    ux00::ux00ddr_enablereadleveling();
+    ux00::ux00ddr_enablereadlevelinggate();
+    if ux00::ux00ddr_getdramclass() == DRAM_CLASS_DDR4 {
+	ux00::ux00ddr_enablevreftraining();
+    }
+    
+    //mask off interrupts for leveling completion
+    ux00::ux00ddr_mask_leveling_completed_interrupt();
+    
+    ux00::ux00ddr_mask_mc_init_complete_interrupt();
+    ux00::ux00ddr_mask_outofrange_interrupts();
+    ux00::ux00ddr_setuprangeprotection( DDR_SIZE);
+    ux00::ux00ddr_mask_port_command_error_interrupt();
+    
+    let ddr_size: u64 = DDR_SIZE;
+    let ddr_end: u64 = FU540_DRAM + ddr_size;
+    ux00::ux00ddr_start(ddr_size, ddr_end);
+    
+    ux00::ux00ddr_phy_fixup();
+}
 
 pub fn MemSize() -> u64 {
     8*1024

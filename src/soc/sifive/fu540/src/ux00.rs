@@ -72,7 +72,7 @@ fn peek(Pointer:u32, Index: u32) -> u32 {
 
 // #define _REG32((reg::DDR_CTRL,p, i) (*(volatile u32 *)((p) + (i)))
 
-fn phy_reset() {
+pub fn phy_reset() {
     for i in 1152..1214 {
         poke(reg::DDR_PHY, i as u32, ddrregs::DenaliPhyData[i] );
         //u32 physet = DenaliPhyData[i];
@@ -87,7 +87,7 @@ fn phy_reset() {
 }
 
 
-fn ux00ddr_writeregmap() {
+pub fn ux00ddr_writeregmap() {
     for i in 0..265 {
         //  for (i=0;i<=264;i++) {
         poke(reg::DDR_CTRL, i as u32,ddrregs::DenaliCtlData[i]  );
@@ -98,7 +98,7 @@ fn ux00ddr_writeregmap() {
     phy_reset();
 }
 
-pub fn ux00ddr_start(filteraddr: usize, ddrend: usize){
+pub fn ux00ddr_start(filteraddr: u64, ddrend: u64){
 //   // START register at ddrctl register base offset 0
     let regdata = peek(reg::DDR_CTRL,0) | 1;
     poke(reg::DDR_CTRL,0, regdata);
