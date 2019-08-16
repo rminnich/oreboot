@@ -217,6 +217,7 @@ pub fn ux00ddr_phy_fixup()  -> u64 {
                 
                 // print error message on failure
                 if failc0 || failc1 {
+                    // good news: we can use fmt; skip this nonsense.
                     //if (fails==0) uart_puts((void*) UART0_CTRL_ADDR, "DDR error in fixing up \n");
                     fails |= (1<<dq);
                     let mut slicelsc: u8 = 48;
