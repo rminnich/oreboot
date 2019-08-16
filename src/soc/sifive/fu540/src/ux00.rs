@@ -36,10 +36,22 @@ pub const PHY_RX_CAL_DQ1_0_OFFSET: u64 =              16;
 
 // This is a 64-bit machine but all this action seems to be on 32-bit values.
 // No idea why this is.
+// Index is a word offset. 
 fn poke(Pointer:u32, Index: u32, Value: u32) -> () {
-    let addr = (Pointer + Index) as *mut u32;
+    let addr = (Pointer + Index<<2) as *mut u32;
     unsafe {
         ptr::write_volatile(addr, Value.into());
+    }
+}
+
+fn poke64(Pointer:u32, Index: u32, Value: u64) -> () {
+    let addr = (Pointer + Index<<2) as *mut u32;
+    let addr1 = (Pointer + Index<<2 + 4) as *mut u32;
+    unsafe {
+        let v1: u32 = (Value >> 32) as u32;
+        ptr::write_volatile(addr, v1);
+        let v2: u32 = (Value) as u32;
+        ptr::write_volatile(addr1, v2);
     }
 }
 
@@ -54,11 +66,11 @@ fn clr(Pointer:u32, Index: u32, Value: u32) -> () {
 }
 
 fn peek(Pointer:u32, Index: u32) -> u32 {
-    let addr = (Pointer + Index) as *const u32;
+    let addr = (Pointer + Index<<2) as *const u32;
     unsafe { ptr::read_volatile(addr) }
 }
 
-// #define _REG32((reg:DDR_CTRL,p, i) (*(volatile u32 *)((p) + (i)))
+// #define _REG32((reg::DDR_CTRL,p, i) (*(volatile u32 *)((p) + (i)))
 
 fn phy_reset() {
     for i in 1152..1214 {
@@ -88,92 +100,98 @@ fn ux00ddr_writeregmap() {
 
 pub fn ux00ddr_start(filteraddr: usize, ddrend: usize){
 //   // START register at ddrctl register base offset 0
-//   u32 regdata = _REG32((reg:DDR_CTRL,0);
-//   regdata |= 0x1;
-//   poke(reg:DDR_CTRL,0, regdata);
-//   // WAIT for initialization complete : bit 8 of INT_STATUS (DENALI_CTL_132) 0x210
-//   while ((_REG32((reg:DDR_CTRL,132) & (1<<MC_INIT_COMPLETE_OFFSET)) == 0) {}
-
-//   // Disable the BusBlocker in front of the controller AXI slave ports
-//   volatile u64 *filterreg = (volatile uint64_t *)filteraddr;
-//   filterreg[0] = 0x0f00000000000000UL | (ddrend >> 2);
-//   //                ^^ RWX + TOR
-// }
+    let regdata = peek(reg::DDR_CTRL,0) | 1;
+    poke(reg::DDR_CTRL,0, regdata);
+    // WAIT for initialization complete : bit 8 of INT_STATUS (DENALI_CTL_132) 0x210
+    // 132 * 4
+    loop {
+        let r = peek(reg::DDR_CTRL,132);
+        let m = 1<<MC_INIT_COMPLETE_OFFSET;
+        if (r & m) != 0 {
+            break;
+        }
+    }
+    
+    // Disable the BusBlocker in front of the controller AXI slave ports
+    let freg = peek(filteraddr as u32, 0);
+    poke64(freg, 0, (0x0f00000000000000 | (ddrend >> 2)) as u64);
+    //         volatile u64 *filterreg = (volatile uint64_t *)filteraddr;
+    //   filterreg[0] = 0x0f00000000000000UL | (ddrend >> 2);
+    //   //                ^^ RWX + TOR
 }
 
-// pub fn ux00ddr_mask_mc_init_complete_interrupt() {
-//   // Mask off Bit 8 of Interrupt Status
-//   // Bit [8] The MC initialization has been completed
-//   set((reg:DDR_CTRL,136, 1<<MC_INIT_COMPLETE_OFFSET);
-// }
+pub fn ux00ddr_mask_mc_init_complete_interrupt() {
+  // Mask off Bit 8 of Interrupt Status
+  // Bit [8] The MC initialization has been completed
+  set(reg::DDR_CTRL,136, 1<<MC_INIT_COMPLETE_OFFSET);
+}
 
-// pub fn ux00ddr_mask_outofrange_interrupts() {
-//   // Mask off Bit 8, Bit 2 and Bit 1 of Interrupt Status
-//   // Bit [2] Multiple accesses outside the defined PHYSICAL memory space have occured
-//   // Bit [1] A memory access outside the defined PHYSICAL memory space has occured
-//   set((reg:DDR_CTRL,136, (1<<OUT_OF_RANGE_OFFSET) | (1<<MULTIPLE_OUT_OF_RANGE_OFFSET));
-// }
+pub fn ux00ddr_mask_outofrange_interrupts() {
+  // Mask off Bit 8, Bit 2 and Bit 1 of Interrupt Status
+  // Bit [2] Multiple accesses outside the defined PHYSICAL memory space have occured
+  // Bit [1] A memory access outside the defined PHYSICAL memory space has occured
+  set(reg::DDR_CTRL,136, (1<<OUT_OF_RANGE_OFFSET) | (1<<MULTIPLE_OUT_OF_RANGE_OFFSET));
+}
 
-// pub fn ux00ddr_mask_port_command_error_interrupt() {
-//   // Mask off Bit 7 of Interrupt Status
-//   // Bit [7] An error occured on the port command channel
-//   set((reg:DDR_CTRL,136, 1<<PORT_COMMAND_CHANNEL_ERROR_OFFSET);
-// }
+pub fn ux00ddr_mask_port_command_error_interrupt() {
+  // Mask off Bit 7 of Interrupt Status
+  // Bit [7] An error occured on the port command channel
+  set(reg::DDR_CTRL,136, 1<<PORT_COMMAND_CHANNEL_ERROR_OFFSET);
+}
 
-// pub fn ux00ddr_mask_leveling_completed_interrupt() {
-//   // Mask off Bit 22 of Interrupt Status
-//   // Bit [22] The leveling operation has completed
-//   set((reg:DDR_CTRL,136, 1<<LEVELING_OPERATION_COMPLETED_OFFSET);
-// }
+pub fn ux00ddr_mask_leveling_completed_interrupt() {
+  // Mask off Bit 22 of Interrupt Status
+  // Bit [22] The leveling operation has completed
+  set(reg::DDR_CTRL,136, 1<<LEVELING_OPERATION_COMPLETED_OFFSET);
+}
 
-// pub fn ux00ddr_setuprangeprotection( isize end_addr) {
-//   poke(reg:DDR_CTRL,209, 0x0);
-//   isize end_addr_16Kblocks = ((end_addr >> 14) & 0x7FFFFF)-1;
-//   poke(reg:DDR_CTRL,210, ((u32) end_addr_16Kblocks);
-//   poke(reg:DDR_CTRL,212, 0x0);
-//   poke(reg:DDR_CTRL,214, 0x0);
-//   poke(reg:DDR_CTRL,216, 0x0);
-//   set((reg:DDR_CTRL,224, 0x3 << AXI0_RANGE_PROT_BITS_0_OFFSET);
-//   poke(reg:DDR_CTRL,225, 0xFFFFFFFF);
-//   set((reg:DDR_CTRL,208, 1 << AXI0_ADDRESS_RANGE_ENABLE);
-//   set((reg:DDR_CTRL,208, 1 << PORT_ADDR_PROTECTION_EN_OFFSET);
+pub fn ux00ddr_setuprangeprotection(end_addr: u32) {
+    poke(reg::DDR_CTRL,209, 0x0);
+    let end_addr_16Kblocks: u32 = ((end_addr >> 14) & 0x7FFFFF)-1;
+    poke(reg::DDR_CTRL,210, end_addr_16Kblocks);
+    poke(reg::DDR_CTRL,212, 0x0);
+    poke(reg::DDR_CTRL,214, 0x0);
+    poke(reg::DDR_CTRL,216, 0x0);
+    set(reg::DDR_CTRL,224, 0x3 << AXI0_RANGE_PROT_BITS_0_OFFSET);
+    poke(reg::DDR_CTRL,225, 0xFFFFFFFF);
+    set(reg::DDR_CTRL,208, 1 << AXI0_ADDRESS_RANGE_ENABLE);
+    set(reg::DDR_CTRL,208, 1 << PORT_ADDR_PROTECTION_EN_OFFSET);
+}
 
-// }
+pub fn ux00ddr_disableaxireadinterleave() {
+  set(reg::DDR_CTRL,120, 1<<DISABLE_RD_INTERLEAVE_OFFSET);
+}
 
-// pub fn ux00ddr_disableaxireadinterleave() {
-//   set((reg:DDR_CTRL,120, 1<<DISABLE_RD_INTERLEAVE_OFFSET);
-// }
+pub fn ux00ddr_disableoptimalrmodw() {
+  clr(reg::DDR_CTRL,21, !(1<<OPTIMAL_RMODW_EN_OFFSET));
+}
 
-// pub fn ux00ddr_disableoptimalrmodw() {
-//   _REG32((reg:DDR_CTRL,21) &= (~(1<<OPTIMAL_RMODW_EN_OFFSET));
-// }
+pub fn ux00ddr_enablewriteleveling() {
+  set(reg::DDR_CTRL,170, (1<<WRLVL_EN_OFFSET) | (1<<DFI_PHY_WRLELV_MODE_OFFSET));
+}
 
-// pub fn ux00ddr_enablewriteleveling() {
-//   set((reg:DDR_CTRL,170, (1<<WRLVL_EN_OFFSET) | (1<<DFI_PHY_WRLELV_MODE_OFFSET));
-// }
+pub fn ux00ddr_enablereadleveling() {
+  set(reg::DDR_CTRL,181, 1<<DFI_PHY_RDLVL_MODE_OFFSET);
+  set(reg::DDR_CTRL,260, 1<<RDLVL_EN_OFFSET);
+}
 
-// pub fn ux00ddr_enablereadleveling() {
-//   set((reg:DDR_CTRL,181, 1<<DFI_PHY_RDLVL_MODE_OFFSET);
-//   set((reg:DDR_CTRL,260, 1<<RDLVL_EN_OFFSET);
-// }
+pub fn ux00ddr_enablereadlevelinggate() {
+  set(reg::DDR_CTRL,260, 1<<RDLVL_GATE_EN_OFFSET);
+  set(reg::DDR_CTRL,182, 1<<DFI_PHY_RDLVL_GATE_MODE_OFFSET);
+}
 
-// pub fn ux00ddr_enablereadlevelinggate() {
-//   set((reg:DDR_CTRL,260, 1<<RDLVL_GATE_EN_OFFSET);
-//   set((reg:DDR_CTRL,182, 1<<DFI_PHY_RDLVL_GATE_MODE_OFFSET);
-// }
+pub fn ux00ddr_enablevreftraining() {
+  set(reg::DDR_CTRL,184, 1<<VREF_EN_OFFSET);
+}
 
-// pub fn ux00ddr_enablevreftraining() {
-//   set((reg:DDR_CTRL,184, 1<<VREF_EN_OFFSET);
-// }
-
-//  u32 ux00ddr_getdramclass() {
-//   return ((_REG32((reg:DDR_CTRL,0) >> DRAM_CLASS_OFFSET) & 0xF);
-// }
+pub fn ux00ddr_getdramclass() -> u32 {
+    (peek(reg::DDR_CTRL,0) >> DRAM_CLASS_OFFSET) & 0xF
+}
 
 //  u64 ux00ddr_phy_fixup() {
 //   // return bitmask of failed lanes
 
-//   isize ddrphyreg = DDR_CTRL + 0x2000;
+//   isize ddrphyreg = reg::DDR_CTRL + 0x2000;
 
 //   u64 fails=0;
 //   u32 slicebase = 0;
@@ -183,7 +201,7 @@ pub fn ux00ddr_start(filteraddr: usize, ddrend: usize){
 //   for (u32 slice = 0; slice < 8; slice++) {
 //     u32 regbase = slicebase + 34;
 //     for (u32 reg = 0 ; reg < 4; reg++) {
-//       u32 updownreg = _REG32((reg:DDR_CTRL,(regbase+reg), ddrphyreg);
+//       u32 updownreg = _REG32((reg::DDR_CTRL,(regbase+reg), ddrphyreg);
 //       for (u32 bit = 0; bit < 2; bit++) {
 //         u32 phy_rx_cal_dqn_0_offset;
 
