@@ -145,9 +145,9 @@ pub fn ux00ddr_mask_leveling_completed_interrupt() {
   set(reg::DDR_CTRL,136, 1<<LEVELING_OPERATION_COMPLETED_OFFSET);
 }
 
-pub fn ux00ddr_setuprangeprotection(end_addr: u32) {
+pub fn ux00ddr_setuprangeprotection(end_addr: u64) {
     poke(reg::DDR_CTRL,209, 0x0);
-    let end_addr_16Kblocks: u32 = ((end_addr >> 14) & 0x7FFFFF)-1;
+    let end_addr_16Kblocks: u32 = (((end_addr >> 14) & 0x7FFFFF)-1) as u32;
     poke(reg::DDR_CTRL,210, end_addr_16Kblocks);
     poke(reg::DDR_CTRL,212, 0x0);
     poke(reg::DDR_CTRL,214, 0x0);
