@@ -188,55 +188,53 @@ pub fn ux00ddr_getdramclass() -> u32 {
     (peek(reg::DDR_CTRL,0) >> DRAM_CLASS_OFFSET) & 0xF
 }
 
-//  u64 ux00ddr_phy_fixup() {
-//   // return bitmask of failed lanes
-
-//   isize ddrphyreg = reg::DDR_CTRL + 0x2000;
-
-//   u64 fails=0;
-//   u32 slicebase = 0;
-//   u32 dq = 0;
-
-//   // check errata condition
-//   for (u32 slice = 0; slice < 8; slice++) {
-//     u32 regbase = slicebase + 34;
-//     for (u32 reg = 0 ; reg < 4; reg++) {
-//       u32 updownreg = _REG32((reg::DDR_CTRL,(regbase+reg), ddrphyreg);
-//       for (u32 bit = 0; bit < 2; bit++) {
-//         u32 phy_rx_cal_dqn_0_offset;
-
-//         if (bit==0) {
-//           phy_rx_cal_dqn_0_offset = PHY_RX_CAL_DQ0_0_OFFSET;
-//         }else{
-//           phy_rx_cal_dqn_0_offset = PHY_RX_CAL_DQ1_0_OFFSET;
-//         }
-
-//         u32 down = (updownreg >> phy_rx_cal_dqn_0_offset) & 0x3F;
-//         u32 up = (updownreg >> (phy_rx_cal_dqn_0_offset+6)) & 0x3F;
-
-//         uint8_t failc0 = ((down == 0) && (up == 0x3F));
-//         uint8_t failc1 = ((up == 0) && (down == 0x3F));
-
-//         // print error message on failure
-//         if (failc0 || failc1) {
-//           //if (fails==0) uart_puts((void*) UART0_CTRL_ADDR, "DDR error in fixing up \n");
-//           fails |= (1<<dq);
-//           char slicelsc = '0';
-//           char slicemsc = '0';
-//           slicelsc += (dq % 10);
-//           slicemsc += (dq / 10);
-//           //uart_puts((void*) UART0_CTRL_ADDR, "S ");
-//           //uart_puts((void*) UART0_CTRL_ADDR, &slicemsc);
-//           //uart_puts((void*) UART0_CTRL_ADDR, &slicelsc);
-//           //if (failc0) uart_puts((void*) UART0_CTRL_ADDR, "U");
-//           //else uart_puts((void*) UART0_CTRL_ADDR, "D");
-//           //uart_puts((void*) UART0_CTRL_ADDR, "\n");
-//         }
-//         dq++;
-//       }
-//     }
-//     slicebase+=128;
-//   }
-//   return (0);
-// }
+// TODO: scrub this mess. coreboot had some bugs.
+pub fn ux00ddr_phy_fixup()  -> u64 {
+    // return bitmask of failed lanes
+    
+    let ddrphyreg: u32= reg::DDR_CTRL + 0x2000;
+    
+    let mut fails: u64 = 0;
+    let mut slicebase: u32 = 0;
+    let mut dq: u32 = 0;
+    for slice in 0 .. 8 {
+        // check errata condition
+        let regbase: u32 = slicebase;
+        for reg in 0 .. 4 {
+            // what the hell?
+            let updownreg: u32 = peek((regbase+reg)<<2, ddrphyreg);
+            for bit in 0 .. 2 {
+                let mut phy_rx_cal_dqn_0_offset: u64 = 0;
+                if bit == 0 {
+                    phy_rx_cal_dqn_0_offset = PHY_RX_CAL_DQ0_0_OFFSET;
+                } else {
+                    phy_rx_cal_dqn_0_offset = PHY_RX_CAL_DQ1_0_OFFSET;
+                }
+                let down: u32 = (updownreg >> phy_rx_cal_dqn_0_offset) & 0x3F;
+                let up: u32 = (updownreg >> (phy_rx_cal_dqn_0_offset+6)) & 0x3F;
+                let failc0: bool = ((down == 0) && (up == 0x3F));
+                let failc1: bool = ((up == 0) && (down == 0x3F));
+                
+                // print error message on failure
+                if failc0 || failc1 {
+                    //if (fails==0) uart_puts((void*) UART0_CTRL_ADDR, "DDR error in fixing up \n");
+                    fails |= (1<<dq);
+                    let mut slicelsc: u8 = 48;
+                    let mut slicemsc: u8 = 48;
+                    slicelsc += (dq % 10) as u8;
+                    slicemsc += (dq / 10) as u8;
+                    //uart_puts((void*) UART0_CTRL_ADDR, "S ");
+                    //uart_puts((void*) UART0_CTRL_ADDR, &slicemsc);
+                    //uart_puts((void*) UART0_CTRL_ADDR, &slicelsc);
+                    //if (failc0) uart_puts((void*) UART0_CTRL_ADDR, "U");
+                    //else uart_puts((void*) UART0_CTRL_ADDR, "D");
+                    //uart_puts((void*) UART0_CTRL_ADDR, "\n");
+                }
+                dq = dq + 1;
+            }
+        }
+        slicebase+=128;
+    }
+    0
+}
 
