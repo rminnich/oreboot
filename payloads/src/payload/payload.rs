@@ -193,29 +193,33 @@ impl StreamPayload {
         let mut hdr: usize = 0;
         writeln!(w, "loading ...").unwrap();
         loop {
-            writeln!(w, "decode header at {}", hdr).unwrap();
+            write!(w, "decode header at {:x?}\n", hdr).unwrap();
             let v = &mut [0u8; 28];
             let rom = SectionReader::new(&Memory {}, self.rom + hdr, 28);
             hdr += 28;
-            writeln!(w, "decode header now at {}", hdr).unwrap();
+            write!(w, "decode header now at {:x?}\n", hdr).unwrap();
             rom.pread(v, 0).unwrap();
             let mut seg: CBFSSeg = from_bytes(v).unwrap();
             // Better minds than mine can figure this shit out. Or when I learn more.
             let typ: stype = core::convert::From::from(seg.typ);
             match typ {
-                stype::CBFS_SEGMENT_ENTRY | stype::CBFS_SEGMENT_CODE | stype::CBFS_SEGMENT_DATA | stype::CBFS_SEGMENT_BSS | stype::CBFS_SEGMENT_PARAMS => {
-                    writeln!(w, "seg {:?}", seg).unwrap();
+                stype::CBFS_SEGMENT_ENTRY
+                | stype::CBFS_SEGMENT_CODE
+                | stype::CBFS_SEGMENT_DATA
+                | stype::CBFS_SEGMENT_BSS
+                | stype::CBFS_SEGMENT_PARAMS => {
+                    write!(w, "seg {:x?}\n", seg).unwrap();
                     seg.off = seg.off.to_be();
                     seg.load = seg.load.to_be();
                     seg.len = seg.len.to_be();
                     seg.memlen = seg.memlen.to_be();
-                    writeln!(w, "afterward seg {:?}", seg).unwrap();
+                    write!(w, "afterward seg {:x?}\n", seg).unwrap();
                 }
                 stype::PAYLOAD_SEGMENT_BAD => {
-                    panic!("Panic'ing on PAYLOAD_SEGMENT_BAD: seg now {:?} {:?} typ {:?}", self.rom, seg, typ);
+                    panic!("Panic'ing on PAYLOAD_SEGMENT_BAD: seg now {:x?} {:x?} typ {:x?}", self.rom, seg, typ);
                 }
                 _ => {
-                    writeln!(w, "Seg is unchanged: {:?}\n", seg).unwrap();
+                    write!(w, "Seg is unchanged: {:x?}\n", seg).unwrap();
                 }
             }
 
@@ -227,7 +231,7 @@ impl StreamPayload {
                 // in cbfs, this is always the LAST segment.
                 // We should continue the convention.
                 stype::CBFS_SEGMENT_ENTRY => {
-                    writeln!(w, "ENTRY {}", load).unwrap();
+                    write!(w, "ENTRY {:x?}\n", load).unwrap();
                     self.entry = load;
                     return;
                 }
