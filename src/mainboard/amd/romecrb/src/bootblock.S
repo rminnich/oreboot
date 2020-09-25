@@ -79,8 +79,18 @@ gdtptr16:
 	.word	gdt_end - gdt -1 /* compute the table limit */
 	.long	gdt		 /* we know the offset */
 3:
+	movb $0x42, %al
+	outb %al, $0x80
 	// TOS contains a pointer to the gdt descriptor
 	popl %eax
+	outb %al, $0x80
+	shrl $8, %eax
+	outb %al, $0x80
+	shrl $8, %eax
+	outb %al, $0x80
+	shrl $8, %eax
+	outb %al, $0x80
+1: jmp 1b
 	lgdt (%eax)
 	// Now fix up the page table
 	// pml3 is fine, but pml4 needs the pointer set.

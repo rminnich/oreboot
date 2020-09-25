@@ -48,6 +48,8 @@
 
 _start16bit:
 	cli
+movb $0xaa, %al
+outb	%al, $0x80
 	/* Save the BIST result */
 	movl	%eax, %ebp
 
@@ -110,14 +112,19 @@ _start16bit:
 	 * See IA32 manual Vol 3A 19.26 Interrupts.
 	 */
 
+/*
 	movw	%cs, %ax
 	shlw	$4, %ax
 	movw	$0xffe8, %bx
 	subw	%ax, %bx
 	lidt	%cs:(%bx)
-	movw	$0xffc8, %bx
-	subw	%ax, %bx
-	lgdtl	%cs:(%bx)
+*/
+	movl	$0xffffffc8, %ebx
+	.byte 0x66, 0x2E, 0x0F, 0x01, 0x17
+	// Leave it hand assembled. gas will NOT do the right thing.
+	//lgdtl	%cs:(%bx)
+movb $0xab, %al
+outb	%al, $0x80
 
 	movl	%cr0, %eax
 	andl	$0x7FFAFFD1, %eax /* PG,AM,WP,NE,TS,EM,MP = 0 */
@@ -131,6 +138,9 @@ _start16bit:
 	ljmpl	$8, $0xffffffb1
 .org 0xffb1
 protected:
+	movb $0xac, %al
+outb	%al, $0x80
+//1: jmp 1b
 	movw	$0x10, %ax
 	movw	%ax, %ds
 	movw	%ax, %es
@@ -139,7 +149,8 @@ protected:
 	movw	%ax, %gs
 
 	/* Restore the BIST value to %eax */
-	movl	%ebp, %eax
+//	movl	%ebp, %eax
+	movb $0xed, %al
 	jmp 1f
 
 	/**
@@ -147,6 +158,7 @@ protected:
 	 * at 0x08, and a 4 GB data segment at 0x10;
 	 */
 .org 0xFFc8
+9:
 .globl gdtptr16
 gdtptr16:
 	.word	0x1f			  /* compute the table limit */
@@ -183,9 +195,9 @@ gdt_end:
 .code32
 // Make the jmp be the last bytes -- makes patching it easy
 1:
+//	nop
 	nop
-	nop
+	outb %al, $0x80
 	movl $0x76ff0010, %esp
-	movl $0x76ff0000, %eax
-	pushl %eax
+	push $0x76ff0000
 	ret

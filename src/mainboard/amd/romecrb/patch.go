@@ -22,6 +22,7 @@ func main() {
 	a := flag.Args()
 	if len(a) == 0 {
 		a = append(a, "jmporeboot.bin@FFefbf")
+		a = append(a, "start.bin@FF0000")
 		//a = append(a, "x.bin@FFEF72@108e")
 		// for oreboot
 		a = append(a, "target/x86_64-unknown-none/release/bootblob.bin@FF0000@EF00")
