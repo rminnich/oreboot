@@ -14,6 +14,7 @@ var (
 )
 
 func main() {
+	flag.Parse()
 	b, err := ioutil.ReadFile(*in)
 	if err != nil {
 		log.Fatal(err)
