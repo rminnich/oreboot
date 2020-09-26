@@ -37,12 +37,65 @@
 /* Start code to put an i386 or later processor into 32-bit protected mode.
  */
 
-/* Symbol _start16bit must be aligned to 4kB to start AP CPUs with
- * Startup IPI message without RAM.
- */
+.org 0xff00
+gdt:
+	/* selgdt 0, unused */
+	.word	0x0000, 0x0000		/* dummy */
+	.byte	0x00, 0x00, 0x00, 0x00
+
+	/* selgdt 0x08, flat code segment */
+	.word	0xffff, 0x0000
+	.byte	0x00, 0x9b, 0xcf, 0x00 /* G=1 and 0x0f, So we get 4Gbytes
+
+	/* selgdt 0x10,flat data segment */
+	.word	0xffff, 0x0000
+	.byte	0x00, 0x93, 0xcf, 0x00
+
+#define CODE32 0x18
+        /* selgdt 0x18, flat code segment */
+        .word   0xffff, 0x0000
+        .byte   0x00, 0x9b, 0xcf, 0x00 /* G=1 and 0x0f, So we get 4Gbytes
+#define DAT32 0x20                                        for limit */
+        /* selgdt 0x20,flat data segment */
+        .word   0xffff, 0x0000
+        .byte   0x00, 0x93, 0xcf, 0x00
+#define LM 0x28
+        /* selgdt 0x28, long mode code segment. */
+        .quad   0x0020980000000000              /* Long mode CS */
+
+//	/* selgdt 0x18, unused */
+//	.word	0x0000, 0x0000		/* dummy */
+//	.byte	0x00, 0x00, 0x00, 0x00
+//
+//	/* selgdt 0x20, unused */
+//	.word	0x0000, 0x0000		/* dummy */
+//	.byte	0x00, 0x00, 0x00, 0x00
+//
+//	/* selgdt 0x28, unused */
+//	.word	0x0000, 0x0000		/* dummy */
+//	.byte	0x00, 0x00, 0x00, 0x00
+	
+	/* selgdt 0x30, flat data segment */
+	.word	0xffff, 0x0000
+	.byte	0x00, 0x93, 0xcf, 0x00
+
+	/* selgdt 0x38, ?? code segment */
+	.word	0xffff, 0x0000
+	.byte	0x00, 0x9b, 0xaf, 0x00 /* G=1 and 0x0f, So we get 4Gbytes
+
+	/* selgdt 0x40, unused */
+	.word	0x0000, 0x0000		/* dummy */
+	.byte	0x00, 0x00, 0x00, 0x00
+	
+gdt_end:
+
+// This is as far down as we can go?
 .org 0xff72
 
 .code16
+/* Symbol _start16bit must be aligned to 4kB to start AP CPUs with
+ * Startup IPI message without RAM.
+*/
 .globl _start16bit
 .type _start16bit, @function
 
@@ -137,6 +190,7 @@ outb	%al, $0x80
 	/* Now that we are in protected mode jump to a 32 bit code segment. */
 	ljmpl	$8, $0xffffffb1
 .org 0xffb1
+.code32
 protected:
 	movb $0xac, %al
 outb	%al, $0x80
@@ -161,35 +215,9 @@ outb	%al, $0x80
 9:
 .globl gdtptr16
 gdtptr16:
-	.word	0x1f			  /* compute the table limit */
-	.long	0xffffffd0		 /* we know the offset */
+	.word	0x47			  /* compute the table limit */
+	.long	0xffffff00		 /* we know the offset */
 .align	4
-gdt:
-	/* selgdt 0, unused */
-	.word	0x0000, 0x0000		/* dummy */
-	.byte	0x00, 0x00, 0x00, 0x00
-
-	/* selgdt 0x08, flat code segment */
-	.word	0xffff, 0x0000
-	.byte	0x00, 0x9b, 0xcf, 0x00 /* G=1 and 0x0f, So we get 4Gbytes
-					  for limit */
-
-	/* selgdt 0x10,flat data segment */
-	.word	0xffff, 0x0000
-	.byte	0x00, 0x93, 0xcf, 0x00
-
-.org 0xFFe8
-.globl nullidt
-nullidt:
-	.word	0	/* limit */
-	.long	0
-	.word	0
-
-.globl _estart16bit
-_estart16bit:
-	.align	4
-gdt_end:
-
 .org 0xfff0
 .byte 0xeb, 0x80
 .code32

@@ -83,6 +83,7 @@ gdtptr16:
 	outb %al, $0x80
 	// TOS contains a pointer to the gdt descriptor
 	popl %eax
+	pushl %eax
 	outb %al, $0x80
 	shrl $8, %eax
 	outb %al, $0x80
@@ -90,8 +91,10 @@ gdtptr16:
 	outb %al, $0x80
 	shrl $8, %eax
 	outb %al, $0x80
-1: jmp 1b
+	popl %eax
 	lgdt (%eax)
+	movb $0xbf, %al
+	outb %al, $0x80
 	// Now fix up the page table
 	// pml3 is fine, but pml4 needs the pointer set.
 	// by doing this we remove dependence on the linker to
@@ -99,6 +102,12 @@ gdtptr16:
 	movl $pml3, %eax
 	orl $3, %eax
 	movl %eax, pml4
+	outb %al, $0x80
+	shrl $8, %eax
+	outb %al, $0x80
+	shrl $8, %eax
+	outb %al, $0x80
+	shrl $8, %eax
 	outb %al, $0x80
 
 	movb $0xbe, %al
