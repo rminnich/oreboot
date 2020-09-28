@@ -136,12 +136,9 @@ outb	%al, $0x80
 	lidt	%cs:(%bx)
 */
 	movl	$0xffffffc8, %ebx
-	.byte 0x66, 0x2E, 0x0F, 0x01, 0x17
 	// Leave it hand assembled. gas will NOT do the right thing.
 	//lgdtl	%cs:(%bx)
-movb $0xab, %al
-outb	%al, $0x80
-
+	.byte 0x66, 0x2E, 0x0F, 0x01, 0x17
 	movl	%cr0, %eax
 	andl	$0x7FFAFFD1, %eax /* PG,AM,WP,NE,TS,EM,MP = 0 */
 	orl	$0x60000001, %eax /* CD, NW, PE = 1 */
@@ -156,7 +153,7 @@ outb	%al, $0x80
 .code32
 protected:
 	movb $0xac, %al
-outb	%al, $0x80
+	outb	%al, $0x80
 //1: jmp 1b
 	movw	$0x10, %ax
 	movw	%ax, %ds
@@ -166,8 +163,7 @@ outb	%al, $0x80
 	movw	%ax, %gs
 
 	/* Restore the BIST value to %eax */
-//	movl	%ebp, %eax
-	movb $0xed, %al
+	movl	%ebp, %eax
 	jmp 1f
 
 	/**
@@ -182,7 +178,8 @@ gdtptr16:
 	.long	0xffffff00		 /* we know the offset */
 .align	4
 .org 0xfff0
-.byte 0xeb, 0x80
+	// This a hand-assembled jump back as far as possible
+	.byte 0xeb, 0x80
 .code32
 // Make the jmp be the last bytes -- makes patching it easy
 1:
