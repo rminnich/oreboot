@@ -58,7 +58,7 @@ func main() {
 			plen = int(l)
 		}
 		if (off + plen) > len(b) {
-			log.Fatalf("Off %d  + len %d is > len of file %d", off, plen, len(b))
+			log.Fatalf("Off %#08x  + len %#08x is %#08x > len of file %#08x", off, plen, off + plen, len(b))
 		}
 		if plen > len(patch) {
 			log.Printf("(warning)Patch will only be %#x bytes, not %#x bytes\n", len(patch), plen)
