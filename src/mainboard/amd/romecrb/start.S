@@ -50,43 +50,6 @@ gdt:
 	/* selgdt 0x10,flat data segment */
 	.word	0xffff, 0x0000
 	.byte	0x00, 0x93, 0xcf, 0x00
-
-#define CODE32 0x18
-        /* selgdt 0x18, flat code segment */
-        .word   0xffff, 0x0000
-        .byte   0x00, 0x9b, 0xcf, 0x00 /* G=1 and 0x0f, So we get 4Gbytes
-#define DAT32 0x20                                        for limit */
-        /* selgdt 0x20,flat data segment */
-        .word   0xffff, 0x0000
-        .byte   0x00, 0x93, 0xcf, 0x00
-#define LM 0x28
-        /* selgdt 0x28, long mode code segment. */
-        .quad   0x0020980000000000              /* Long mode CS */
-
-//	/* selgdt 0x18, unused */
-//	.word	0x0000, 0x0000		/* dummy */
-//	.byte	0x00, 0x00, 0x00, 0x00
-//
-//	/* selgdt 0x20, unused */
-//	.word	0x0000, 0x0000		/* dummy */
-//	.byte	0x00, 0x00, 0x00, 0x00
-//
-//	/* selgdt 0x28, unused */
-//	.word	0x0000, 0x0000		/* dummy */
-//	.byte	0x00, 0x00, 0x00, 0x00
-	
-	/* selgdt 0x30, flat data segment */
-	.word	0xffff, 0x0000
-	.byte	0x00, 0x93, 0xcf, 0x00
-
-	/* selgdt 0x38, ?? code segment */
-	.word	0xffff, 0x0000
-	.byte	0x00, 0x9b, 0xaf, 0x00 /* G=1 and 0x0f, So we get 4Gbytes
-
-	/* selgdt 0x40, unused */
-	.word	0x0000, 0x0000		/* dummy */
-	.byte	0x00, 0x00, 0x00, 0x00
-	
 gdt_end:
 
 // This is as far down as we can go?
@@ -215,7 +178,7 @@ outb	%al, $0x80
 9:
 .globl gdtptr16
 gdtptr16:
-	.word	0x47			  /* compute the table limit */
+	.word	0x1f			  /* compute the table limit */
 	.long	0xffffff00		 /* we know the offset */
 .align	4
 .org 0xfff0
