@@ -14,7 +14,9 @@ use print;
 use uart::i8250::I8250;
 mod mainboard;
 use mainboard::MainBoard;
-use x86_64::instructions::{rdmsr};
+mod msr;
+use msr::msrs;
+use x86_64::instructions::rdmsr;
 extern crate heapless; // v0.4.x
 use heapless::consts::*;
 use heapless::Vec;
@@ -156,6 +158,7 @@ pub extern "C" fn _start(fdt_address: usize) -> ! {
     post.pwrite(&p, 0x80).unwrap();
     let w = &mut print::WriteTo::new(uart0);
 
+    msrs(w);
     // It is hard to say if we need to do this.
     if true {
         let v = rdmsr(0xc001_1004);

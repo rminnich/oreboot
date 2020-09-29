@@ -25,7 +25,7 @@ func main() {
 		a = append(a, "start.bin@FF0000")
 		//a = append(a, "x.bin@FFEF72@108e")
 		// for oreboot
-		a = append(a, "target/x86_64-unknown-none/release/bootblob.bin@FF0000@EF00")
+		a = append(a, "target/x86_64-unknown-none/release/bootblob.bin@Fe0000@1EF00")
 		a = append(a, "target/x86_64-unknown-none/release/image.bin@C00000@3f0000")
 	}
 	for _, v := range a {

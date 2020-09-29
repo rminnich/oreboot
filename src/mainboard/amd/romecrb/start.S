@@ -186,6 +186,7 @@ gdtptr16:
 //	nop
 	nop
 	outb %al, $0x80
-	movl $0x76ff0010, %esp
-	push $0x76ff0000
+	// Uses first part of gdt as stack.
+	movl $0x76fe0010, %esp
+	push $0x76fe0000
 	ret
