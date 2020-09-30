@@ -4,18 +4,19 @@ use x86_64::instructions::{rdmsr, wrmsr};
 fn one(w: &mut print::WriteTo, a: u32, v: u64, ro: bool) {
     write!(w, "{:x} ", a).unwrap();
     let rv = rdmsr(a);
-    let mut d = "";
+    let mut d = "SAME:";
     if rv != v {
-        d = "DIFF";
+        d = "DIFF:";
     }
-    write!(w, "{} tried to chagne it {:x} got {:x}\r\n", d, v, rv,).unwrap();
+    write!(w, "{}{:x} got {:x}", d, v, rv,).unwrap();
     if !ro {
         unsafe {
             wrmsr(a, v);
         }
         let nv = rdmsr(a);
-        write!(w, "{} {:x} got {:x}; \r\n", d, v, nv).unwrap();
+        write!(w, " -- wrmsr: and got {:x}; \r\n", nv).unwrap();
     }
+    write!(w, "\r\n");
 }
 pub fn msrs(w: &mut print::WriteTo) {
     one(w, 0xc0000080, 0xd01, false);
@@ -108,28 +109,28 @@ pub fn msrs(w: &mut print::WriteTo) {
     // one(w, 0xc0010035, 0x20202020202020, false);
     // one(w, 0xc0010056, 0x28000b2, false);
     // one(w, 0xc0010058, 0xe0000021, false);
-//    //one(w, 0xc0010061, 0x20, false);
-   one(w, 0xc0010064, 0x8000000045d2085e, false);
-   one(w, 0xc0010065, 0x8000000045160a64, false);
-   one(w, 0xc0010066, 0x8000000043da0c5a, false);
-   one(w, 0xc0010073, 0x813, false);
-   one(w, 0xc0010074, 0x289, false);
-   one(w, 0xc0010111, 0xafba2000, false);
-   one(w, 0xc0010112, 0xac000000, false);
-   one(w, 0xc0010113, 0xfffffc006003, false);
-   one(w, 0xc001020b, 0xffff, false);
-   one(w, 0xc0010292, 0x40b8012, false);
-   one(w, 0xc0010293, 0x104886, false);
-   one(w, 0xc0010294, 0xf8e847f00008912, false);
-   one(w, 0xc0010296, 0x484848, false);
-   one(w, 0xc0010297, 0x380000fc000, false);
-   one(w, 0xc0010299, 0xa1003, false);
-   one(w, 0xc001029a, 0x9731905d, false);
-   one(w, 0xc001029b, 0x95073877, false);
-   one(w, 0xc00102b3, 0xfff0, false);
-   one(w, 0xc00102f0, 0x1, false);
-   one(w, 0xc0010400, 0x600, false);
-   one(w, 0xc0010401, 0x2c00, false);
+    //    //one(w, 0xc0010061, 0x20, false);
+    one(w, 0xc0010064, 0x8000000045d2085e, false);
+    one(w, 0xc0010065, 0x8000000045160a64, false);
+    one(w, 0xc0010066, 0x8000000043da0c5a, false);
+    one(w, 0xc0010073, 0x813, false);
+    one(w, 0xc0010074, 0x289, false);
+    one(w, 0xc0010111, 0xafba2000, false);
+    one(w, 0xc0010112, 0xac000000, false);
+    one(w, 0xc0010113, 0xfffffc006003, false);
+    one(w, 0xc001020b, 0xffff, false);
+    one(w, 0xc0010292, 0x40b8012, false);
+    one(w, 0xc0010293, 0x104886, false);
+    one(w, 0xc0010294, 0xf8e847f00008912, false);
+    one(w, 0xc0010296, 0x484848, false);
+    one(w, 0xc0010297, 0x380000fc000, false);
+    one(w, 0xc0010299, 0xa1003, false);
+    one(w, 0xc001029a, 0x9731905d, false);
+    one(w, 0xc001029b, 0x95073877, false);
+    one(w, 0xc00102b3, 0xfff0, false);
+    one(w, 0xc00102f0, 0x1, false);
+    one(w, 0xc0010400, 0x600, false);
+    one(w, 0xc0010401, 0x2c00, false);
     one(w, 0xc0010402, 0x8, false);
     one(w, 0xc0010406, 0x40, false);
     one(w, 0xc0010407, 0x80, false);
@@ -147,36 +148,54 @@ pub fn msrs(w: &mut print::WriteTo) {
     one(w, 0xc0011000, 0x8000, false);
     one(w, 0xc0011002, 0x219c91a9, false);
     one(w, 0xc0011003, 0x1, false);
-    ////one(w, 0xc0011004, 0x7ed8320b178bfbff, false);
-    ////one(w, 0xc0011005, 0x75c237ff2fd3fbff, false);
-    ////one(w, 0xc001100c, 0xff711b00, false);
-    ////one(w, 0xc0011020, 0x6404000000000, false);
-    ////one(w, 0xc0011021, 0x2000000, false);
-    ////one(w, 0xc0011022, 0xc000000002500000, false);
-    ////one(w, 0xc0011023, 0x2000000000020, false);
-    ////one(w, 0xc0011028, 0x200248000d4, false);
-    ////one(w, 0xc0011029, 0x3000310e08002, false);
-    ////one(w, 0xc001102a, 0x38080, false);
-    ////one(w, 0xc001102b, 0x2008cc17, false);
-    ////one(w, 0xc001102c, 0x309c70000000000, false);
-    ////one(w, 0xc001102d, 0x101c00000010, false);
-    ////one(w, 0xc001102e, 0x12024000000000, false);
-    ////one(w, 0xc001103a, 0x100, false);
-    ////one(w, 0xc0011074, 0xa000000000000000, false);
-    ////one(w, 0xc0011076, 0x14, false);
-    ////one(w, 0xc0011077, 0x6d00000000000000, false);
-    ////one(w, 0xc0011083, 0x38d6b5ad1bc6b5ad, false);
-    ////one(w, 0xc0011092, 0x57840a05, false);
-    ////one(w, 0xc0011093, 0x6071f9fc, false);
-    ////one(w, 0xc0011094, 0x110c, false);
-    ////one(w, 0xc0011097, 0x5dbf, false);
-    ////one(w, 0xc0011098, 0xa, false);
-    ////one(w, 0xc00110a2, 0xc9000000, false);
-    ////one(w, 0xc00110dc, 0x3030018cf757, false);
-    ////one(w, 0xc00110dd, 0x13bcff, false);
-    ////one(w, 0xc00110e1, 0x410e50400c2cb4e0, false);
-    ////one(w, 0xc00110e2, 0x2afa00082018, false);
-    ////one(w, 0xc00110e3, 0x1, false);
+    if true {
+        // boots ok, does not fix apic timer verification
+        one(w, 0xc0011004, 0x7ed8320b178bfbff, false);
+        one(w, 0xc0011005, 0x75c237ff2fd3fbff, false);
+        one(w, 0xc001100c, 0xff711b00, false);
+        one(w, 0xc0011020, 0x6404000000000, false);
+        one(w, 0xc0011021, 0x2000000, false);
+        one(w, 0xc0011022, 0xc000000002500000, false);
+        one(w, 0xc0011023, 0x2000000000020, false);
+        one(w, 0xc0011028, 0x200248000d4, false);
+        one(w, 0xc0011029, 0x3000310e08002, false);
+        one(w, 0xc001102a, 0x38080, false);
+        one(w, 0xc001102b, 0x2008cc17, false);
+        one(w, 0xc001102c, 0x309c70000000000, false);
+        one(w, 0xc001102d, 0x101c00000010, false);
+        one(w, 0xc001102e, 0x12024000000000, false);
+    }
+    if true {
+        // boots ok, does not fix apic timer
+        one(w, 0xc001103a, 0x100, true); // gpf on write
+        one(w, 0xc0011074, 0xa000000000000000, false);
+        one(w, 0xc0011076, 0x14, false);
+        one(w, 0xc0011077, 0x6d00000000000000, false);
+        one(w, 0xc0011083, 0x38d6b5ad1bc6b5ad, false);
+        one(w, 0xc0011092, 0x57840a05, false);
+        one(w, 0xc0011093, 0x6071f9fc, false);
+        one(w, 0xc0011094, 0x110c, false);
+        one(w, 0xc0011097, 0x5dbf, false);
+    }
+    if true {
+        // boots ok, does not fix apic timer
+        one(w, 0xc0011098, 0xa, false);
+        one(w, 0xc00110a2, 0xc9000000, false);
+        one(w, 0xc00110dc, 0x3030018cf757, false);
+    }
+    if true {
+        // if these next four are enabled, we get past apic verification as failure
+        one(w, 0xc00110dd, 0x13bcff, false);
+        one(w, 0xc00110e1, 0x410e50400c2cb4e0, false);
+    }
+    if true {
+        // if one of these two are disabled, apic fails.
+        one(w, 0xc00110e2, 0x2afa00082018, false); // It's this one. It's undocumented.
+    }
+    if true {
+        one(w, 0xc00110e3, 0x1, false);
+    }
+
     ////one(w, 0x10, 0x6780a9b73d4, false);
     ////one(w, 0x1b, 0xfee00900, true);
     ////one(w, 0x8b, 0x8301038, true);

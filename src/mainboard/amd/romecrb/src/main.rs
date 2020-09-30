@@ -4,9 +4,9 @@
 #![no_main]
 #![feature(global_asm)]
 
+use arch::bios::setup_bios_tables;
 use arch::bzimage::BzImage;
 use arch::ioport::IOPort;
-use arch::bios::setup_bios_tables;
 use core::fmt::Write;
 use core::panic::PanicInfo;
 use model::Driver;
@@ -176,7 +176,7 @@ pub extern "C" fn _start(fdt_address: usize) -> ! {
         //let v = rdmsr(0xc001_1004);
         //write!(w, "c001_1004 is {:x} and APIC is bit {:x}\r\n", v, 1 << 9).unwrap();
     }
-        write!(w, "0x1b is {:x} \r\n", rdmsr(0x1b)).unwrap();
+    write!(w, "0x1b is {:x} \r\n", rdmsr(0x1b)).unwrap();
     p[0] = p[0] + 1;
     let payload = &mut BzImage {
         low_mem_size: 0x80000000,
