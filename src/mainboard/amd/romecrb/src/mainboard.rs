@@ -73,8 +73,9 @@ impl Driver for MainBoard {
         unsafe {
             let v = rdmsr(0x1b) | 0x900;
             wrmsr(0x1b, v);
-            let v = rdmsr(0x1b) | 0xd00;
-            wrmsr(0x1b, v);
+            //let v = rdmsr(0x1b) | 0xd00;
+            //write!(w, "NOT ENABLING x2apic!!!\n\r");
+            //wrmsr(0x1b, v);
         }
         // IOAPIC
         //     wmem fed80300 e3070b77

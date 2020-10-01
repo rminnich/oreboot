@@ -158,7 +158,6 @@ pub extern "C" fn _start(fdt_address: usize) -> ! {
     post.pwrite(&p, 0x80).unwrap();
     let w = &mut print::WriteTo::new(uart0);
 
-    msrs(w);
     // It is hard to say if we need to do this.
     if true {
         let v = rdmsr(0xc001_1004);
@@ -188,11 +187,13 @@ pub extern "C" fn _start(fdt_address: usize) -> ! {
         load: 0x01000000,
         entry: 0x1000200,
     };
+    if true {msrs(w);}
     p[0] = p[0] + 1;
     write!(w, "Write bios tables\r\n").unwrap();
     setup_bios_tables(w, 0xf0000, 1);
     write!(w, "Wrote bios tables, entering debug\r\n").unwrap();
     debug(w);
+    if false {msrs(w);}
     write!(w, "LDN is {:x}\r\n", peek32(0xfee000d0)).unwrap();
     poke32(0xfee000d0, 0x1000000);
     write!(w, "LDN is {:x}\r\n", peek32(0xfee000d0)).unwrap();

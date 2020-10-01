@@ -16,7 +16,7 @@ fn one(w: &mut print::WriteTo, a: u32, v: u64, ro: bool) {
         let nv = rdmsr(a);
         write!(w, " -- wrmsr: and got {:x}; \r\n", nv).unwrap();
     }
-    write!(w, "\r\n");
+    write!(w, "\r\n").unwrap();
 }
 pub fn msrs(w: &mut print::WriteTo) {
     one(w, 0xc0000080, 0xd01, false);
