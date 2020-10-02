@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+set -x
+as -o start.o start.S
+objcopy -O binary start.o start.bin
+PAYLOAD_A=orebootkernel make
+go run patch.go
+echo start.bin@ff0000
+echo this to run qemu: qemu-system-x86_64 -m 3072m -nographic -s -S -monitor /dev/pts/3 -serial /dev/tty -bios bios16.bin
+exit 0
+reset
+echo hit return for qemu, or ^c to break out
+read i
+qemu-system-x86_64 -m 3072m -nographic -s -S -monitor /dev/pts/3 -serial /dev/tty -bios bios16.bin
