@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 set -x
+(cd ~/go/src/github.com/u-root/u-root && u-root -defaultsh=rush -uinitcmd=/bbin/console cmds/core/init cmds/core/cat cmds/core/pci cmds/core/ls cmds/core/io cmds/core/mknod cmds/core/msr cmds/exp/rush/ cmds/exp/console )
+(cd ~/AMD64/linux && cp /tmp/initramfs.linux_amd64.cpio . && make && cp arch/x86/boot/bzImage ~/oreboot/src/mainboard/amd/romecrb/orebootkernel)
 as -o start.o start.S
 objcopy -O binary start.o start.bin
 PAYLOAD_A=orebootkernel make
