@@ -99,7 +99,7 @@ pub fn msrs(w: &mut print::WriteTo) {
 
     // ?
     // one(w, 0xc0010010, 0xf40000, false);
-    // one(w, 0xc0010015, 0x9000010, false);
+    one(w, 0xc0010015, 0x0000_0000_0900_0010, false);
 
     // tom and tom2
     one(w, 0xc001001a, 0x80000000, false);
