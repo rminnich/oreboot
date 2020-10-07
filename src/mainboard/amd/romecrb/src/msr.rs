@@ -96,20 +96,27 @@ pub fn msrs(w: &mut print::WriteTo) {
     one(w, 0xc00021a5, 0x50005e100, false);
     one(w, 0xc00021b4, 0x70000007d, false);
     one(w, 0xc00021b5, 0x1002e00001e01, false);
+
+    // ?
     // one(w, 0xc0010010, 0xf40000, false);
     // one(w, 0xc0010015, 0x9000010, false);
-    // one(w, 0xc001001a, 0xb0000000, false);
-    // one(w, 0xc001001d, 0x450000000, false);
-    // one(w, 0xc0010022, 0x200, false);
-    // one(w, 0xc0010030, 0x4359504520444d41, false);
-    // one(w, 0xc0010031, 0x3233203235343720, false);
-    // one(w, 0xc0010032, 0x72502065726f432d, false);
-    // one(w, 0xc0010033, 0x20726f737365636f, false);
-    // one(w, 0xc0010034, 0x2020202020202020, false);
-    // one(w, 0xc0010035, 0x20202020202020, false);
-    // one(w, 0xc0010056, 0x28000b2, false);
-    // one(w, 0xc0010058, 0xe0000021, false);
-    //    //one(w, 0xc0010061, 0x20, false);
+
+    // tom and tom2
+    one(w, 0xc001001a, 0x80000000, false);
+    one(w, 0xc001001d, 0x450000000, false);
+
+    // one(w, 0xc0010022, 0x200, false); no mce
+    // what's your name?
+    one(w, 0xc0010030, 0x4359504520444d41, false);
+    one(w, 0xc0010031, 0x3233203235343720, false);
+    one(w, 0xc0010032, 0x72502065726f432d, false);
+    one(w, 0xc0010033, 0x20726f737365636f, false);
+    one(w, 0xc0010034, 0x2020202020202020, false);
+    one(w, 0xc0010035, 0x20202020202020, false);
+
+    one(w, 0xc0010056, 0x28000b2, false);
+    one(w, 0xc0010058, 0xe0000021, false);
+    //   one(w, 0xc0010061, 0x20, false); error on write.
     one(w, 0xc0010064, 0x8000000045d2085e, false);
     one(w, 0xc0010065, 0x8000000045160a64, false);
     one(w, 0xc0010066, 0x8000000043da0c5a, false);
@@ -196,13 +203,13 @@ pub fn msrs(w: &mut print::WriteTo) {
         one(w, 0xc00110e3, 0x1, false);
     }
 
-    ////one(w, 0x10, 0x6780a9b73d4, false);
+    ////one(w, 0x10, 0x6780a9b73d4, true);
     ////one(w, 0x1b, 0xfee00900, true);
     ////one(w, 0x8b, 0x8301038, true);
-    ////one(w, 0xe7, 0x322248bbed, false);
-    ////one(w, 0xe8, 0x3a9d34b62b, false);
-    ////one(w, 0xfe, 0x508, false);
-    ////one(w, 0x179, 0x11c, false);
+    ////one(w, 0xe7, 0x322248bbed, false); don't boether.
+    ////one(w, 0xe8, 0x3a9d34b62b, false); don't bother
+    ////one(w, 0xfe, 0x508, true); don't bother
+    ////one(w, 0x179, 0x11c, true);
     one(w, 0x200, 0x6, false);
     one(w, 0x201, 0xffff80000800, false);
     one(w, 0x202, 0x80000006, false);
