@@ -16,6 +16,8 @@ mod mainboard;
 use mainboard::MainBoard;
 mod msr;
 use msr::msrs;
+mod c00;
+use c00::c00;
 use x86_64::instructions::rdmsr;
 extern crate heapless; // v0.4.x
 use heapless::consts::*;
@@ -32,6 +34,17 @@ fn poke32(a: u32, v: u32) -> () {
     }
 }
 
+/// Write 32 bits to port
+unsafe fn outl(port: u16, val: u32) {
+    llvm_asm!("outl %eax, %dx" :: "{dx}"(port), "{al}"(val));
+}
+
+/// Read 32 bits from port
+unsafe fn inl(port: u16) -> u32 {
+    let ret: u32;
+    llvm_asm!("inl %dx, %eax" : "={ax}"(ret) : "{dx}"(port) :: "volatile");
+    return ret;
+}
 fn peek32(a: u32) -> u32 {
     let y = a as *const u32;
     unsafe { ptr::read_volatile(y) }
@@ -84,6 +97,30 @@ fn mem(w: &mut print::WriteTo, a: Vec<u8, U16>) -> () {
     }
 }
 
+fn ind(w: &mut print::WriteTo, a: Vec<u8, U16>) -> () {
+    let mut vals: Vec<u64, U8> = Vec::new();
+    hex(&a, &mut vals);
+
+    // I wish I knew rust. This code is shit.
+    for a in vals.iter() {
+        let m = unsafe {inl(*a as u16)};
+        write!(w, "{:x?}: {:x?}\r\n", *a, m).unwrap();
+    }
+}
+
+fn out(w: &mut print::WriteTo, a: Vec<u8, U16>) -> () {
+    let mut vals: Vec<u64, U8> = Vec::new();
+    hex(&a, &mut vals);
+
+    // I wish I knew rust. This code is shit.
+    for i in 0..vals.len()/2 {
+        let a = vals[i*2] as u16;
+        let v = vals[i*2+1] as u32;
+        unsafe {outl(a, v);};
+        write!(w, "{:x?}: {:x?}\r\n", a,v).unwrap();
+    }
+}
+
 fn memb(w: &mut print::WriteTo, a: Vec<u8, U16>) -> () {
     let mut vals: Vec<u64, U8> = Vec::new();
     hex(&a, &mut vals);
@@ -132,6 +169,12 @@ fn debug(w: &mut print::WriteTo) -> () {
             }
             b'm' => {
                 mem(w, line);
+            }
+            b'i' => {
+                ind(w, line);
+            }
+            b'o' => {
+                out(w, line);
             }
             b'h' => {
                 memb(w, line);
@@ -194,6 +237,7 @@ pub extern "C" fn _start(fdt_address: usize) -> ! {
     write!(w, "Wrote bios tables, entering debug\r\n").unwrap();
     debug(w);
     if false {msrs(w);}
+    c00(w);
     write!(w, "LDN is {:x}\r\n", peek32(0xfee000d0)).unwrap();
     poke32(0xfee000d0, 0x1000000);
     write!(w, "LDN is {:x}\r\n", peek32(0xfee000d0)).unwrap();

@@ -12,7 +12,6 @@ model = { path = "../../../drivers/model" }
 print = { path = "../../../lib/print" }
 payloads = { path = "../../../../payloads"}
 wrappers = { path = "../../../drivers/wrappers"}
-
 heapless = "0.4.x"
 register = "0.3.2"
 static-ref = "0.1.1"
