@@ -39,11 +39,16 @@ entryfromreset:
 	// The starting address of this code block is in %rdi
 	// TODO: set stack.
 	//movl $entryfromreset, %esp
+	// This is a 3 byte instruction.
 	call 3f
+	// Leave some roon here in case we want to, e.g.,
+	// adjust the stack or something.
+	.align 16
 .globl gdtptr
 gdtptr:
 	.word	gdt_end - gdt -1 /* compute the table limit */
-	.long	gdt		 /* we know the offset */
+8:
+	.long	0		// to be loaded later.
 
 	.align	4
 /* these are deliberately changed to a higher selgdt number so we can verify
@@ -79,7 +84,16 @@ gdt_end:
 	outb %al, $0x80
 	// TOS contains a pointer to the gdt descriptor
 	popl %eax
+	// The low 4 bits of %eax are 3.
+	// the gdt pointer is aligned to 16.
+	// Set the low 4-bits of offset to 16.
+	andb $0xf0, %al
+	orb $0x10, %al
 	pushl %eax
+	// Adjust the gdt pointer for where we are.
+	addl	$8, %eax
+	// Now put the adjusted pointer
+	movl 	%eax, 8b
 	outb %al, $0x80
 	shrl $8, %eax
 	outb %al, $0x80
