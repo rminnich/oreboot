@@ -74,10 +74,6 @@ gdt:
 	.quad	0x0020980000000000		/* Long mode CS */
 
 gdt_end:
-.globl gdtptr16
-gdtptr16:
-	.word	gdt_end - gdt -1 /* compute the table limit */
-	.long	gdt		 /* we know the offset */
 3:
 	movb $0x42, %al
 	outb %al, $0x80
