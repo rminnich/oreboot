@@ -85,6 +85,7 @@ BROKEN_CRATES_TO_TEST := \
 	src/mainboard/emulation/qemu-fsp/Cargo.toml \
 	src/mainboard/emulation/qemu-q35/Cargo.toml \
 	src/mainboard/emulation/qemu-riscv/Cargo.toml \
+	src/mainboard/google/trembyle/Cargo.toml \
 	src/mainboard/nuvoton/npcm7xx/Cargo.toml \
 	src/mainboard/opentitan/crb/Cargo.toml \
 	src/mainboard/sifive/hifive/Cargo.toml \
@@ -106,6 +107,7 @@ BROKEN_CRATES_TO_CLIPPY := \
 	src/mainboard/emulation/qemu-armv7/Cargo.toml \
 	src/mainboard/emulation/qemu-fsp/Cargo.toml \
 	src/mainboard/emulation/qemu-q35/Cargo.toml \
+	src/mainboard/google/trembyle/Cargo.toml \
 	src/mainboard/nuvoton/npcm7xx/Cargo.toml \
 	src/vendorcode/fsp/coffeelake/Cargo.toml \
 
