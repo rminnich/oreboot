@@ -32,6 +32,9 @@ use smn::{smn_read, smn_write};
 use uart::i8250::I8250;
 use vcell::VolatileCell;
 use x86_64::registers::model_specific::Msr;
+use core::fmt::Write;
+use model::Driver;
+use wrappers::DoD;
 
 const SMB_UART_CONFIG: *const VolatileCell<u32> = 0xfed8_00fc as *const _;
 const SMB_UART_1_8M_SHIFT: u8 = 28;
@@ -88,27 +91,34 @@ where
 
 // WIP: mainboard driver. I mean the concept is a WIP.
 pub struct MainBoard<'a> {
-    debug_io: IOPort,
-    debug: Option<DebugPort<'a>>,
-    uart0_io: IOPort,
-    uart0: Option<I8250<'a>>,
-    p0: AMDMMIO,
+    debug: &'a mut dyn Driver,
+    uart0: &'a mut dyn Driver,
+    console: &'a mut dyn Driver,
+    w: &'a mut print::WriteTo<'a>,
     //pub text_outputs: [&'a mut dyn Driver; 3],
 }
 
 impl<'a> MainBoard<'_> {
     pub fn new() -> MainBoard<'a> {
-        let mut result = MainBoard { uart0_io: IOPort,
-                    uart0: None,
-                    debug_io: IOPort,
-                    debug: None,
-                    p0: AMDMMIO::com2() };
-        result.uart0 = Some(I8250::new(0x3f8, 0, &mut result.uart0_io));
-        result.debug = Some(DebugPort::new(0x80, &mut result.debug_io));
+        let uart0_io = &mut IOPort;
+        let debug_io = &mut IOPort;
+        let uart0 = &mut I8250::new(0x3f8, 0, uart0_io);
+        let debug = &mut DebugPort::new(0x80, debug_io);
+        let s = &mut [uart0 as &mut dyn Driver, debug as &mut dyn Driver];
+        let console = &mut DoD::new(s);
+        let w = &mut print::WriteTo::new(console);
+        uart0.init().unwrap();
+        uart0.pwrite(b"Welcome to oreboot\r\n", 0).unwrap();
+        debug.init().unwrap();
+        debug.pwrite(b"Welcome to oreboot - debug port 80\r\n", 0).unwrap();
+
+        let mut result = MainBoard {
+            uart0: uart0,
+            debug: debug,
+            console: console,
+            w: w,
+        };
         result
-    }
-    pub fn text_outputs(&self) -> [&'a mut dyn Driver; 3] {
-        [self.uart0.as_mut().unwrap(), self.debug.as_mut().unwrap(), &mut self.p0]
     }
 }
 
@@ -197,17 +207,9 @@ impl Driver for MainBoard<'_> {
             // IOHC::IOAPIC_BASE_ADDR_LO
             smn_write(0x13B1_02f0, 0xFEC0_0001);
 
-            self.uart0.as_mut().unwrap().init().unwrap();
-            self.uart0.as_mut().unwrap().pwrite(b"Welcome to oreboot\r\n", 0).unwrap();
-            self.debug.as_mut().unwrap().init().unwrap();
-            self.debug.as_mut().unwrap().pwrite(b"Welcome to oreboot - debug port 80\r\n", 0).unwrap();
-            self.p0.init().unwrap();
-            self.p0.pwrite(b"Welcome to oreboot - com2\r\n", 0).unwrap();
             //self.text_outputs = [self.debug as &mut dyn Driver, uart0 as &mut dyn Driver, p0 as &mut dyn Driver];
             //let mut p: [u8; 1] = [0xf0; 1];
             //post.pwrite(&p, 0x80).unwrap();
-
-            let w = &mut print::WriteTo::new(self.text_outputs()[0]);
 
             // Logging.
             smnhack(w, 0x13B1_02F4, 0x00000000u32);
